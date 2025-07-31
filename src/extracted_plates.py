@@ -3,6 +3,10 @@ import numpy as np
 
 win_name = "scanning"
 img = cv2.imread("../img/car1.jpg")
+print("❌ 이미지를 불러올 수 없습니다. 경로를 확인하세요.")
+exit()
+
+
 rows, cols = img.shape[:2]
 draw = img.copy()
 pts_cnt = 0
@@ -48,11 +52,37 @@ def onMouse(event, x, y, flags, param):  #마우스 이벤트 콜백 함수 구�
             result = cv2.warpPerspective(img, mtrx, (width, height))
             cv2.imshow('scanned', result)
 
-            scan_count += 1
-            filename = f'scanned_{scan_count}.jpg'
-            cv2.imwrite(filename, result)
-            print(f"저장완료: {filename}")
+            # 1. 그레이스케일로 변환
+            gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
 
+            # 2. 블러 처리 (노이즈 제거)
+            blur = cv2.GaussianBlur(gray, (5, 5), 0)
+
+            # 3. 에지 검출 (윤곽선)
+            edges = cv2.Canny(blur, 30, 100)
+
+            # 4. 결과 확인용 창 추가
+            cv2.imshow('edges', edges)
+
+            # 5. 윤곽선 이미지 저장
+            edge_filename = f'scanned_{scan_count}_edges.jpg'
+            cv2.imwrite(edge_filename, edges)
+            print(f"✅ 윤곽선 저장 완료: {edge_filename}")
+
+            result = cv2.warpPerspective(img, mtrx, (width, height))
+            cv2.imshow('scanned', result)
+
+            # 🔽 윤곽선 처리 추가
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            blur = cv2.GaussianBlur(gray, (5, 5), 0)
+            edges = cv2.Canny(blur, 75, 200)
+            cv2.imshow('gray', gray)
+            cv2.imshow("edges_original", edges)
+
+
+            cv2.imwrite("gray.jpg", gray)
+            cv2.imwrite("edges_original.jpg", edges)
+            print("✅ 초기 흑백/윤곽선 이미지 저장 완료")
             pts_cnt = 0
             draw[:] = img[:]
 
